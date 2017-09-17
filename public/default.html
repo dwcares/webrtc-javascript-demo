@@ -1,12 +1,18 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>WebRTC</title>
+        <title>WebRTC Demo</title>
         <link rel="stylesheet" href="default.css" />
     </head>
     <body>
         <h1>WebRTC Demo</h1>
-        <video autoplay></video>
+        <video class="localVideo" autoplay></video>
+        <video class="remoteVideo" autoplay></video>
+
+        <button class="joinButton">Join</button>
+        <button class="callButton">Call</button>
+        
+        <script src="/socket.io/socket.io.js"></script>        
         <script src="lib/webrtc-adapter.js"></script>        
         <script src="default.js"></script>
     </body>
