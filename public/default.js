@@ -6,6 +6,11 @@ var socket = io.connect();
 var video = document.querySelector('.localVideo');
 var remoteVideo = document.querySelector('.remoteVideo');
 
+var clientInfo = document.querySelector('.client.info');
+var clientStatus = document.querySelector('.client.status');
+var peerInfo = document.querySelector('.peer.info');
+var peerStatus = document.querySelector('.peer.status');
+
 var joinButton = document.querySelector('.joinButton');
 var callButton = document.querySelector('.callButton');
 
@@ -26,8 +31,6 @@ navigator.mediaDevices.getUserMedia(constraints).then((stream) => {
     video.src = stream;
   }
 
-  socket.emit('message', 'mediaReady');
-  
   peerConnection.addStream(stream);
 
 }, (err) => {
@@ -38,27 +41,31 @@ navigator.mediaDevices.getUserMedia(constraints).then((stream) => {
 // Step 2: Join a room
 ///////////////////////////////
 
-joinButton.addEventListener('click', (e) => {
-  var room = "David"
-  socket.emit('join', room);
+var name = "David"
+socket.emit('join', name);
+
+
+socket.on('joined', (clientId) => {
+  console.log('Joined: ' + clientId);
+
+  clientInfo.innerText = clientId;
+  
+  clientStatus.classList.add('online');  
+});
+
+socket.on('join', (name, clientId) => {
+  peerInfo.innerText = clientId;
+  peerStatus.classList.add('online');
 })
 
-socket.on('created', (room, clientId) => {
-  isInitiator = true;
-  console.log('Created room: ' + room)
-  
-});
-
-socket.on('joined', (room, clientId) => {
-  console.log('Joined room: ' + room);
-
-  isInitiator = false;
-});
+socket.on('ready', () => {
+  callButton.disabled = false;
+})
 
 
 
-socket.on('full', (room) => {
-  console.log('Room: ' + room + ' is full');
+socket.on('full', () => {
+  console.log('Room is full');
 });
 
 
@@ -90,9 +97,9 @@ peerConnection.onicecandidate = (e) => {
     socket.emit('candidate',
     {
       type: 'candidate',
-      label: event.candidate.sdpMLineIndex,
-      id: event.candidate.sdpMid,
-      candidate: event.candidate.candidate
+      label: e.candidate.sdpMLineIndex,
+      id: e.candidate.sdpMid,
+      candidate: e.candidate.candidate
     });
   }
 };
@@ -103,7 +110,6 @@ peerConnection.onicecandidate = (e) => {
 /////////////////////////////////////
 
 callButton.addEventListener('click', (e) => {
-  if (isInitiator) {
     peerConnection.createOffer((sessionDescription) => {
       peerConnection.setLocalDescription(sessionDescription);
   
@@ -113,7 +119,6 @@ callButton.addEventListener('click', (e) => {
       console.log('Create offer error: ' + error);
   
     });
-  }
 })
 
 socket.on('offer', (offer) => {
