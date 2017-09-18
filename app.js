@@ -6,31 +6,31 @@ var io = require('socket.io')(http);
 var port = process.env.PORT || 3000;
 var clients = [];
 
-app.get('/', function (req, res) {
+app.get('/', (req, res) => {
     res.sendFile(__dirname + '/public/default.html');
 
 });
 
-io.on('connection', function (socket) {
-    socket.on('join', function (name) {
-        console.log('Join:  ' + name);
+io.on('connection', (socket) => {
+    socket.on('login', (name) => {
+        console.log('Login: ' + name);
 
         var numClients = clients.length;
 
         console.log(numClients + ' client(s)');
 
         if (numClients === 0) {
-            console.log('Client ID ' + socket.id + ' joined');
+            console.log('Client ID ' + socket.id + ' connected');
             
-            socket.emit('joined', socket.id);            
+            socket.emit('connected', socket.id);            
             clients.push({ id: socket.id, name: name});
 
         } else if (numClients === 1) {
-            console.log('Client ID ' + socket.id + ' joined');
+            console.log('Client ID ' + socket.id + ' connected');
             
-            socket.emit('joined', socket.id);
-            socket.emit('join', clients[0].name, clients[0].id);
-            socket.broadcast.emit('join', name, socket.id);
+            socket.emit('connected', socket.id);
+            socket.emit('new-client', clients[0].name, clients[0].id);
+            socket.broadcast.emit('new-client', name, socket.id);
             
             clients.push({ id: socket.id, name: name});
             io.emit('ready');            
@@ -58,6 +58,6 @@ io.on('connection', function (socket) {
 
 });
 
-http.listen(port, function () {
+http.listen(port, () => {
     console.log('listening on *: ' + port);
 });

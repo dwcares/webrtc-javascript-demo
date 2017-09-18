@@ -42,27 +42,28 @@ navigator.mediaDevices.getUserMedia(constraints).then((stream) => {
 ///////////////////////////////
 
 var name = "David"
-socket.emit('join', name);
+socket.emit('login', name);
 
-
-socket.on('joined', (clientId) => {
-  console.log('Joined: ' + clientId);
+socket.on('connected', (clientId) => {
+  console.log('Connected: ' + clientId);
 
   clientInfo.innerText = clientId;
   
   clientStatus.classList.add('online');  
 });
 
-socket.on('join', (name, clientId) => {
+socket.on('new-client', (name, clientId) => {
+  console.log('New client: ' + clientId);
+
   peerInfo.innerText = clientId;
   peerStatus.classList.add('online');
 })
 
 socket.on('ready', () => {
+  console.log('Ready to go');
+  
   callButton.disabled = false;
 })
-
-
 
 socket.on('full', () => {
   console.log('Room is full');
