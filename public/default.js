@@ -1,83 +1,53 @@
 'use strict';
 
-var isInitiator;
 var socket = io.connect();
 
 var video = document.querySelector('.localVideo');
 var remoteVideo = document.querySelector('.remoteVideo');
-
 var clientInfo = document.querySelector('.client.info');
 var clientStatus = document.querySelector('.client.status');
 var peerInfo = document.querySelector('.peer.info');
 var peerStatus = document.querySelector('.peer.status');
-
 var joinButton = document.querySelector('.joinButton');
 var callButton = document.querySelector('.callButton');
 
-///////////////////////////////
-// Step 1: Get the webcam video
-///////////////////////////////
-
-var constraints = {
-  audio: false,
-  video: true
-};
-
-navigator.mediaDevices.getUserMedia(constraints).then((stream) => {
-  window.localStream = stream; // stream available to console
-  if (window.URL) {
-    video.src = window.URL.createObjectURL(stream);
-  } else {
-    video.src = stream;
-  }
-
-  peerConnection.addStream(stream);
-
-}, (err) => {
-  console.log('navigator.getUserMedia error: ', error);
-})
-
-///////////////////////////////
-// Step 2: Join a room
-///////////////////////////////
-
-var name = "David"
-socket.emit('login', name);
-
-socket.on('connected', (clientId) => {
-  console.log('Connected: ' + clientId);
-
-  clientInfo.innerText = clientId;
-  
-  clientStatus.classList.add('online');  
-});
-
-socket.on('new-client', (name, clientId) => {
-  console.log('New client: ' + clientId);
-
-  peerInfo.innerText = clientId;
-  peerStatus.classList.add('online');
-})
-
-socket.on('ready', () => {
-  console.log('Ready to go');
-  
-  callButton.disabled = false;
-})
-
-socket.on('full', () => {
-  console.log('Room is full');
-});
-
-
-/////////////////////////////////////
-// Step 3: Create a peer connection
-/////////////////////////////////////
-
 var servers = {}
-
 var peerConnection = new RTCPeerConnection(servers);
-console.log('Created local peer connection object');
+initCamera(false, true);
+
+socket.emit('login', "David");
+
+callButton.addEventListener('click', (e) => {
+  peerConnection.createOffer((sessionDescription) => {
+    peerConnection.setLocalDescription(sessionDescription);    
+    socket.emit('offer', sessionDescription);
+
+  }, (error) => {
+    console.log('Create offer error: ' + error);
+
+  });
+})
+
+function initCamera(useAudio, useVideo) {
+  var constraints = {
+    audio: useAudio,
+    video: useVideo
+  };
+
+  navigator.mediaDevices.getUserMedia(constraints).then((stream) => {
+    window.localStream = stream;
+    if (window.URL) {
+      video.src = window.URL.createObjectURL(stream);
+    } else {
+      video.src = stream;
+    }
+
+    peerConnection.addStream(stream);
+
+  }, (err) => {
+    console.log('navigator.getUserMedia error: ', error);
+  })
+}
 
 peerConnection.onaddstream = () => {
   console.log('Remote stream added.');
@@ -96,46 +66,53 @@ peerConnection.onicecandidate = (e) => {
     console.log('candidate: ' + e.candidate);
 
     socket.emit('candidate',
-    {
-      type: 'candidate',
-      label: e.candidate.sdpMLineIndex,
-      id: e.candidate.sdpMid,
-      candidate: e.candidate.candidate
-    });
+      {
+        type: 'candidate',
+        label: e.candidate.sdpMLineIndex,
+        id: e.candidate.sdpMid,
+        candidate: e.candidate.candidate
+      });
   }
 };
 
+socket.on('connected', (clientId) => {
+  console.log('Connected: ' + clientId);
 
-/////////////////////////////////////
-// Step 4: Initiate the call
-/////////////////////////////////////
+  clientInfo.innerText = clientId;
 
-callButton.addEventListener('click', (e) => {
-    peerConnection.createOffer((sessionDescription) => {
-      peerConnection.setLocalDescription(sessionDescription);
-  
-      socket.emit('offer', sessionDescription);
-  
-    }, (error) => {
-      console.log('Create offer error: ' + error);
-  
-    });
-})
+  clientStatus.classList.add('online');
+});
+
+socket.on('new-client', (name, clientId) => {
+  console.log('New client: ' + clientId);
+
+  peerInfo.innerText = clientId;
+  peerStatus.classList.add('online');
+});
+
+socket.on('ready', () => {
+  console.log('Ready to go');
+
+  callButton.disabled = false;
+});
+
+socket.on('full', () => {
+  console.log('Room is full');
+});
 
 socket.on('offer', (offer) => {
-
   peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
-  
-  //answer
+
   peerConnection.createAnswer().then((sessionDescription) => {
-      peerConnection.setLocalDescription(sessionDescription);
-      socket.emit('answer', sessionDescription);
-    },
+    peerConnection.setLocalDescription(sessionDescription);
+
+    callButton.disabled = true;      
+    socket.emit('answer', sessionDescription);
+  },
     (error) => {
-      console.log('Answer Error:'+ error);
+      console.log('Answer Error:' + error);
     }
   );
-
 })
 
 socket.on('candidate', (candidate) => {
@@ -146,12 +123,16 @@ socket.on('candidate', (candidate) => {
   peerConnection.addIceCandidate(iceCandidate);
 })
 
-/////////////////////////////////////
-// Step 4: Answer the call
-/////////////////////////////////////
-
 socket.on('answer', (answer) => {
-  peerConnection.setRemoteDescription(new RTCSessionDescription(answer));  
+  callButton.disabled = true;  
+  peerConnection.setRemoteDescription(new RTCSessionDescription(answer));
+})
+
+socket.on('bye', () => {
+  peerConnection.setRemoteDescription();
+  remoteVideo.src = "";
+  peerStatus.classList.remove('online');
+  peerInfo.innerText = "";
 })
 
 

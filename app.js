@@ -22,8 +22,10 @@ io.on('connection', (socket) => {
         if (numClients === 0) {
             console.log('Client ID ' + socket.id + ' connected');
             
-            socket.emit('connected', socket.id);            
-            clients.push({ id: socket.id, name: name});
+            socket.emit('connected', socket.id); 
+
+            socket.name = name;           
+            clients.push(socket);
 
         } else if (numClients === 1) {
             console.log('Client ID ' + socket.id + ' connected');
@@ -32,7 +34,9 @@ io.on('connection', (socket) => {
             socket.emit('new-client', clients[0].name, clients[0].id);
             socket.broadcast.emit('new-client', name, socket.id);
             
-            clients.push({ id: socket.id, name: name});
+            socket.name = name;           
+            clients.push(socket);
+            
             io.emit('ready');            
         } else { // max two clients
             socket.emit('full');
@@ -54,6 +58,15 @@ io.on('connection', (socket) => {
         console.log('candidate: ' + candidate);
         
         socket.broadcast.emit('candidate', candidate);        
+    });
+
+    socket.on('disconnect', () => {
+        console.log('disconnect: ' + socket.id);
+
+        clients.splice(clients.indexOf(socket), 1);
+        
+
+        io.emit('bye');
     });
 
 });
