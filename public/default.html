@@ -1,25 +1,40 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <title>WebRTC Demo</title>
-        <link rel="stylesheet" href="default.css" />
-    </head>
-    <body>
-        <h1>WebRTC Demo</h1>
-        <div>
+
+<head>
+    <title>WebRTC Demo</title>
+    <link rel="stylesheet" href="default.css" />
+    <link rel="shortcut icon" href="/img/favicon.ico" type="image/x-icon">
+    <link rel="icon" href="/img/favicon.ico" type="image/x-icon">    
+</head>
+
+<body>
+    <div class="login">
+        <form class="loginForm hidden">
+            <div class="loginLogo"> </div>
+            <input class="usernameInput" placeholder="Name" autofocus></input>
+            <span> 
+                <button class="connectButton" type="submit">Connect</button>
+            </span>
+        </form>
+    </div>
+    <div class="view">
+        <video class="remoteVideo" autoplay></video>
+        <video class="localVideo hidden" autoplay></video>
+        <h1 class="waiting hidden">Waiting...</h1>        
+        <button class="callButton hidden" disabled></button>
+        <h5 class="partnerInfo"></h5>
+
+        <div class="status">
             <div class="client info"></div>
             <div class="client status"></div>
             <div class="peer info"></div>
             <div class="peer status"></div>
         </div>
+    </div>    
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="lib/webrtc-adapter.js"></script>
+    <script src="default.js"></script>
+</body>
 
-        <video class="localVideo" autoplay></video>
-        <video class="remoteVideo" autoplay></video>
-
-        <button class="callButton" disabled>Call</button>
-        
-        <script src="/socket.io/socket.io.js"></script>        
-        <script src="lib/webrtc-adapter.js"></script>        
-        <script src="default.js"></script>
-    </body>
 </html>

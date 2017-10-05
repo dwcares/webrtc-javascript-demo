@@ -1,32 +1,69 @@
 'use strict';
 
-var socket = io.connect();
+const localVideo = document.querySelector('.localVideo');
+const remoteVideo = document.querySelector('.remoteVideo');
+const clientInfo = document.querySelector('.client.info');
+const clientStatus = document.querySelector('.client.status');
+const peerInfo = document.querySelector('.peer.info');
+const peerStatus = document.querySelector('.peer.status');
+const joinButton = document.querySelector('.joinButton');
+const callButton = document.querySelector('.callButton');
+const waitingText = document.querySelector('.waiting');
 
-var video = document.querySelector('.localVideo');
-var remoteVideo = document.querySelector('.remoteVideo');
-var clientInfo = document.querySelector('.client.info');
-var clientStatus = document.querySelector('.client.status');
-var peerInfo = document.querySelector('.peer.info');
-var peerStatus = document.querySelector('.peer.status');
-var joinButton = document.querySelector('.joinButton');
-var callButton = document.querySelector('.callButton');
+const partnerName = document.querySelector('.partnerInfo');
 
-var servers = {}
-var peerConnection = new RTCPeerConnection(servers);
-initCamera(false, true);
+const loginPage = document.querySelector('.login');
+const loginForm = document.querySelector('.loginForm');
+const loginUserName = document.querySelector('.usernameInput');
 
-socket.emit('login', "David");
+var socket;
+var recognizer;
+
+var myId;
+var myName;
+var peerName;
+
+var peerConnection = new RTCPeerConnection({
+  'iceServers': [{
+    'urls': 'turn:turnserver3dstreaming.centralus.cloudapp.azure.com:5349',
+    'username': 'user',
+    'credential': '3Dtoolkit072017',
+    'credentialType': 'password'
+  }],
+  'iceTransportPolicy': 'relay',
+  'optional': [
+    { 'DtlsSrtpKeyAgreement': true }
+  ]
+});
+
+show(loginForm);
 
 callButton.addEventListener('click', (e) => {
+  if (callButton.classList.contains('hangup')) {
+    socket.emit('bye');
+  }
+});
+
+loginForm.addEventListener('submit', e => {
+  var username = loginUserName.value;
+
+  if (username.length > 0) {
+    initCamera(false, true);
+    myName = username;
+    initSocket();
+  }
+  e.preventDefault();
+});
+
+function sendOffer() {
   peerConnection.createOffer((sessionDescription) => {
-    peerConnection.setLocalDescription(sessionDescription);    
+    peerConnection.setLocalDescription(sessionDescription);
     socket.emit('offer', sessionDescription);
 
   }, (error) => {
     console.log('Create offer error: ' + error);
-
   });
-})
+}
 
 function initCamera(useAudio, useVideo) {
   var constraints = {
@@ -35,19 +72,49 @@ function initCamera(useAudio, useVideo) {
   };
 
   navigator.mediaDevices.getUserMedia(constraints).then((stream) => {
+
     window.localStream = stream;
+
+    localVideo.onplay = (e) => show(localVideo);
     if (window.URL) {
-      video.src = window.URL.createObjectURL(stream);
+      localVideo.src = window.URL.createObjectURL(stream);
     } else {
-      video.src = stream;
+      localVideo.src = stream;
     }
 
     peerConnection.addStream(stream);
 
   }, (err) => {
-    console.log('navigator.getUserMedia error: ', error);
+    console.log('GetUserMedia error: ', error);
   })
 }
+
+function stopCamera() {
+  hide(localVideo);
+  localStream.getVideoTracks()[0].stop();
+  localVideo.src = '';
+}
+
+function show(element) {
+  element.style.visibility = 'visible';
+  element.classList.remove('hidden')
+}
+
+function hide(element, defer) {
+  return new Promise((res, rej) => {
+    element.classList.add('hidden')
+
+    setTimeout((e) => {
+      element.style.visibility = 'hidden';
+      res();
+    }, defer);
+  })
+}
+
+
+////////////////////////////////////
+////// Peer Connection Handlers
+////////////////////////////////////
 
 peerConnection.onaddstream = () => {
   console.log('Remote stream added.');
@@ -64,7 +131,6 @@ peerConnection.onicecandidate = (e) => {
 
   if (e.candidate) {
     console.log('candidate: ' + e.candidate);
-
     socket.emit('candidate',
       {
         type: 'candidate',
@@ -75,64 +141,98 @@ peerConnection.onicecandidate = (e) => {
   }
 };
 
-socket.on('connected', (clientId) => {
-  console.log('Connected: ' + clientId);
 
-  clientInfo.innerText = clientId;
+////////////////////////////////////
+////// Socket.io handlers
+////////////////////////////////////
 
-  clientStatus.classList.add('online');
-});
+function initSocket() {
 
-socket.on('new-client', (name, clientId) => {
-  console.log('New client: ' + clientId);
+  socket = io.connect();
 
-  peerInfo.innerText = clientId;
-  peerStatus.classList.add('online');
-});
+  socket.emit('login', { name: myName });
 
-socket.on('ready', () => {
-  console.log('Ready to go');
+  socket.on('connected', (clientId) => {
+    console.log('Connected: ' + clientId);
+    hide(loginForm, 250).then(() => hide(loginPage, 400));
+    myId = clientId;
+    clientInfo.innerText = clientId;
 
-  callButton.disabled = false;
-});
-
-socket.on('full', () => {
-  console.log('Room is full');
-});
-
-socket.on('offer', (offer) => {
-  peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
-
-  peerConnection.createAnswer().then((sessionDescription) => {
-    peerConnection.setLocalDescription(sessionDescription);
-
-    callButton.disabled = true;      
-    socket.emit('answer', sessionDescription);
-  },
-    (error) => {
-      console.log('Answer Error:' + error);
-    }
-  );
-})
-
-socket.on('candidate', (candidate) => {
-  var iceCandidate = new RTCIceCandidate({
-    sdpMLineIndex: candidate.label,
-    candidate: candidate.candidate
+    clientStatus.classList.add('online');
+    waitingText.classList.remove('hidden');
   });
-  peerConnection.addIceCandidate(iceCandidate);
-})
 
-socket.on('answer', (answer) => {
-  callButton.disabled = true;  
-  peerConnection.setRemoteDescription(new RTCSessionDescription(answer));
-})
+  socket.on('new-client', (name, clientId) => {
+    console.log('New client: ' + clientId + ' name: ' + name);
 
-socket.on('bye', () => {
-  peerConnection.setRemoteDescription();
-  remoteVideo.src = "";
-  peerStatus.classList.remove('online');
-  peerInfo.innerText = "";
-})
+    peerName = name;
+    partnerName.innerHTML = peerName;
+
+    peerInfo.innerText = clientId;
+    peerStatus.classList.add('online');
+  });
+
+  socket.on('ready', (roomId) => {
+    console.log('Ready to go');
+
+    // First person who joined initiates the call
+    if (roomId.split('Room_')[1] == myId) {
+      console.log('sending_offer');
+      sendOffer();
+    }
+    callButton.disabled = false;
+    show(callButton);
+    waitingText.classList.add('hidden');
+  });
+
+  socket.on('offer', (offer) => {
+    peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
+    peerConnection.createAnswer().then((sessionDescription) => {
+      peerConnection.setLocalDescription(sessionDescription);
 
 
+      callButton.classList.add('hangup');
+      socket.emit('answer', sessionDescription);
+    },
+      (error) => {
+        console.log('Answer Error:' + error);
+      }
+    );
+  })
+
+  socket.on('candidate', (candidate) => {
+    var iceCandidate = new RTCIceCandidate({
+      sdpMLineIndex: candidate.label,
+      candidate: candidate.candidate
+    });
+    peerConnection.addIceCandidate(iceCandidate);
+  });
+
+  socket.on('answer', (answer) => {
+    callButton.classList.add('hangup');
+    peerConnection.setRemoteDescription(new RTCSessionDescription(answer));
+  });
+
+  socket.on('bye', () => {
+   
+
+    peerStatus.classList.remove('online');
+    peerInfo.innerText = '';
+    partnerName.innerText = '';
+    socket.disconnect();
+    socket = null;
+
+    hide(callButton, 300).then(() => {
+      callButton.classList.remove('hangup');
+      callButton.disabled = true;
+    });
+    
+    hide(localVideo, 500).then(() => {
+      stopCamera();
+      remoteVideo.src = '';        
+      show(loginPage);
+      show(loginForm);
+    });
+
+  });
+}

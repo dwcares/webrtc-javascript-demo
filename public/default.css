@@ -1,5 +1,237 @@
+html,body {
+    width: 100%;
+    height: 100%;
+    margin: 0px;
+    overflow: hidden;
+   
+}
+
 body {
-    font-family: 'HelveticaNeue-UltraLight', 'Helvetica Neue UltraLight', 'Helvetica Neue', Helvetica, Arial, sans-serif;    
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr;
+}
+
+.login {
+    grid-column: 1;
+    grid-row: 1;
+
+    z-index: 11;
+    width: 100%;
+    height: 100%;
+
+    display: flex;
+    flex-flow: column;
+    background-color: white;
+
+    
+	align-content: center;
+    justify-content: center;
+    
+    transition: transform 350ms ease-in;    
+}
+
+    .login.hidden {
+        transition: transform 350ms ease-in;    
+        transform: translateX(calc(-100vw));        
+    }
+
+    .login .loginForm {
+        display: flex;
+        flex-flow: column;
+        align-items: center;
+        justify-content: center;
+
+        width: 300px;
+        height: 300px;
+        align-self: center;
+
+        border-radius: 5px;        
+        background-color: #333333;
+
+        box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.4);
+        transition: transform 200ms ease-out 400ms;
+        
+    }
+
+    .login .loginForm.hidden {
+        transform: translateY(calc(-50vh - 300px));
+        transition: transform 350ms ease-out;     
+    }
+
+    .login .loginLogo {
+        width: 100px;
+        height: 100px;
+
+        background-image: url('/img/phone.svg');
+        background-size: contain;
+        background-repeat: no-repeat;
+        
+    }
+
+    .login .usernameInput {
+        height: 30px;
+        width: 200px;
+        text-align: center;
+
+        color: #333333;
+
+        font-size: 16pt;
+
+        caret-color: lightgrey;
+        opacity: .8;
+
+    }  
+
+    .login span {
+        width: 200px;
+        margin-top: 20px;
+    }
+
+    .login .connectButton {
+        height: 25px;
+        width: 80px;
+        margin: 0;
+
+        font-size: 11pt;
+        float: right;
+
+
+
+        border: none;
+        border-radius: 2px;
+        color: white;
+        background-color: cornflowerblue;
+        
+    }
+
+    .login .connectButton:hover {
+        background-color: #7B9EDD;
+
+    }
+
+    .login .connectButton:active {
+        background-color: #467FE8
+
+    }
+
+.view {
+    grid-column: 1;
+    grid-row: 1;
+
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr;
+
+    width: 100%;
+    height: 100%; 
+}
+
+.partnerInfo {
+    z-index: 10;
+    grid-column: 1;
+    grid-row: 1;
+    align-self: start;
+    justify-self: center;
+    color: white;
+    font-family: Helvetica, sans-serif;
+    opacity: .8;
+    font-size: 18px;
+}
+
+.waiting {
+    z-index: 10;
+    grid-column: 1;
+    grid-row: 1;
+    align-self: center;
+    justify-self: center;
+    color: white;
+    font-family: Helvetica, sans-serif;
+    opacity: .5;
+}
+
+    .waiting.hidden {
+        display:none;
+    }
+
+.callButton {
+    z-index: 10;
+    grid-column: 1;
+    grid-row: 1;
+    align-self: flex-end;
+
+    margin: 20px;
+    height: 50px;
+    width: 50px;
+
+    background-image: url('/img/phone.svg');
+    background-size: 65%;
+    background-repeat: no-repeat;
+    background-position: 50% 45%;
+    border: none;
+    border-radius: 25px;
+    outline: none;
+
+    background-color: green;
+    transition: transform 300ms ease-out 200ms, background-color 200ms ease 200ms;        
+    transform: rotateZ(-45deg);
+}
+
+    .callButton:hover {
+        background-color: rgba(0,128,0, .8);
+    }
+
+    .callButton:active {
+        background-color: rgb(0,200,0);
+    }
+
+    .callButton.hangup {
+        background-color: rgb(180,0,0);
+        transform: rotateZ(0);
+    }
+
+    .callButton.hangup:hover {
+        background-color: rgba(200,0,0, .8);
+    }
+
+    .callButton.hangup:active {
+        background-color: rgb(255,0,0);
+    }
+
+    .callButton.hidden {
+        
+        transform: translateY(10vh);
+        transition: transform 300ms ease-out 200ms, background-color 200ms ease 200ms;                
+    }
+
+    .callButton:disabled {
+        background-color: grey;
+    }
+
+.localVideo {
+    grid-column: 1;
+    grid-row: 1;
+
+    height: 15vw;
+    justify-self: end;
+    align-self: flex-end;
+    
+    transform: scaleX(-1);
+    transition: transform 300ms ease-out 200ms;    
+}
+
+.localVideo.hidden {
+    transform: translateY(30vh) scaleX(-1);
+}
+
+.remoteVideo {
+    grid-column: 1;
+    grid-row: 1;
+    object-fit: cover;
+    color: white;
+    background-color: black;  
+    width: 100%;
+    height: 100%;
 }
 
 h1 {
@@ -13,6 +245,10 @@ h1 {
 }
 
 .status {
+    display: none;
+    grid-column: 1;
+    grid-row: 1;
+
     background-color: darkgrey;
     width: 10px;
     height: 10px;
