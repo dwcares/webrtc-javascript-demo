@@ -25,12 +25,11 @@ var peerName;
 
 var peerConnection = new RTCPeerConnection({
   'iceServers': [{
-    'urls': 'turn:turnserver3dstreaming.centralus.cloudapp.azure.com:5349',
-    'username': 'user',
-    'credential': '3Dtoolkit072017',
+    'urls': 'turn:13.66.50.197:3478',
+    'username': 'ninefingers',
+    'credential': 'youhavetoberealistic',
     'credentialType': 'password'
   }],
-  'iceTransportPolicy': 'relay',
   'optional': [
     { 'DtlsSrtpKeyAgreement': true }
   ]
