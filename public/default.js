@@ -30,7 +30,6 @@ var peerConnection = new RTCPeerConnection({
     'credential': 'webRTCdemo2017',
     'credentialType': 'password'
   }],
-  'iceTransportPolicy': 'relay',
   'optional': [
     { 'DtlsSrtpKeyAgreement': true }
   ]
