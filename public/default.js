@@ -25,13 +25,14 @@ var peerName;
 
 var peerConnection = new RTCPeerConnection({
   'iceServers': [{
-    'urls': 'turn:13.66.50.197:3478',
-    'username': 'ninefingers',
-    'credential': 'youhavetoberealistic',
+    'urls': 'turn:numb.viagenie.ca',
+    'username': 'webrtcdemo@outlook.com',
+    'credential': 'webRTCdemo2017',
     'credentialType': 'password'
   }],
+  'iceTransportPolicy': 'relay',
   'optional': [
-    { 'DtlsSrtpKeyAgreement': true }
+    { 'DtlsSrtpKeyAgreement': true },
   ]
 });
 
