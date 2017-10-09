@@ -35,7 +35,9 @@ var peerConnection = new RTCPeerConnection({
   ]
 });
 
-show(loginForm);
+if (checkSecure()) {
+  show(loginForm);  
+} 
 
 callButton.addEventListener('click', (e) => {
   if (callButton.classList.contains('hangup')) {
@@ -108,6 +110,16 @@ function hide(element, defer) {
       res();
     }, defer);
   })
+}
+
+function checkSecure() {
+  var isSecure = (location.protocol === 'https:' || location.hostname === 'localhost');
+
+  if (!isSecure) {
+    loginPage.innerText = "This site is built on WebRTC which requires HTTPS or localhost"    
+  }
+  
+  return isSecure;
 }
 
 

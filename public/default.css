@@ -27,6 +27,12 @@ body {
     
 	align-content: center;
     justify-content: center;
+
+    text-align: center;
+    font-family: Helvetica, sans-serif;
+    font-size: 24pt;
+    color: lightgray;
+    
     
     transition: transform 350ms ease-in;    
 }
