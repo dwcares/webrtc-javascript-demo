@@ -32,7 +32,7 @@ var peerConnection = new RTCPeerConnection({
   }],
   'iceTransportPolicy': 'relay',
   'optional': [
-    { 'DtlsSrtpKeyAgreement': true },
+    { 'DtlsSrtpKeyAgreement': true }
   ]
 });
 
